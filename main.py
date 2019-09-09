@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 
 from generator.GeneratorConfig import GeneratorConfig
 from generator.Generator import Generator
+from GeneratorAnalyzer import GeneratorAnalyzer
 from tkinter import *
 from tkinter import messagebox
 from AppContext import AppContext
@@ -17,7 +18,7 @@ class MainApp:
         self.n = StringVar()
         self.modulo = StringVar()
         self.generator = Generator()
-
+        self.analyzer = GeneratorAnalyzer()
         self.init_components()
 
     def init_components(self):
@@ -44,8 +45,31 @@ class MainApp:
         gen_btn = Button(text="Generate", command=self.generate_button)
         gen_btn.grid(row=4, column=1)
 
-        gen_btn = Button(text="Show results", command=self.results_button)
-        gen_btn.grid(row=5, column=1)
+        res_btn = Button(text="Show results", command=self.results_button)
+        res_btn.grid(row=5, column=1)
+
+        diagram_btn = Button(text="Show diagram", command=self.show_diagram)
+        diagram_btn.grid(row=6, column=1)
+
+    def results_button(self):
+        self.analyzer.analyze(self.context.sequence)
+
+        print(self.context.sequence)
+        print(self.analyzer.expected_value)
+        print(self.analyzer.dispersion)
+        print(self.analyzer.period)
+        print(self.analyzer.aperiodicity)
+        # print(self.analyzer.indirect_verification(self.context.sequence))
+
+    def show_diagram(self):
+        self.histogram(self.context.sequence, 20, False, "123", "321")
+
+    def histogram(data, n_bins, cumulative=False, x_label="", y_label="", title=""):
+        _, ax = plt.subplots()
+        ax.hist(data, n_bins=n_bins, cumulative=cumulative, color='#539caf')
+        ax.set_ylabel(y_label)
+        ax.set_xlabel(x_label)
+        ax.set_title(title)
 
     def generate_button(self):
         try:
@@ -62,8 +86,6 @@ class MainApp:
         config = GeneratorConfig(a=a, m=m, start_modulo=modulo)
         self.generator.configure(config)
 
-    def results_button(self):
-        print(self.context.sequence)
 
 
 def start_app():
