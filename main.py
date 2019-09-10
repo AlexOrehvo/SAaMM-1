@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import math
 
-from generator.GeneratorConfig import GeneratorConfig
 from generator.Generator import Generator
-from GeneratorAnalyzer import GeneratorAnalyzer
+from generator.GeneratorConfig import GeneratorConfig
+from analyzer.GeneratorAnalyzer import GeneratorAnalyzer
+from analyzer.GeneratorResult import GeneratorResult
 from tkinter import *
 from tkinter import messagebox
 from AppContext import AppContext
@@ -12,11 +14,19 @@ class MainApp:
 
     def __init__(self, master):
         self.master = master
-        self.context = AppContext()
+
         self.a = StringVar()
         self.m = StringVar()
         self.n = StringVar()
         self.modulo = StringVar()
+        self.expected_value = StringVar()
+        self.dispersion = StringVar()
+        self.sigma = StringVar()
+        self.indirect_sign = StringVar()
+        self.period = StringVar()
+        self.aperiodicity = StringVar()
+
+        self.context = AppContext()
         self.generator = Generator()
         self.analyzer = GeneratorAnalyzer()
         self.init_components()
@@ -43,42 +53,45 @@ class MainApp:
         modulo_default_entry.grid(row=3, column=1, padx=5, pady=5)
 
         gen_btn = Button(text="Generate", command=self.generate_button)
-        gen_btn.grid(row=4, column=1)
+        gen_btn.grid(row=4, column=0)
 
         res_btn = Button(text="Show results", command=self.results_button)
-        res_btn.grid(row=5, column=1)
+        res_btn.grid(row=4, column=1)
 
-        diagram_btn = Button(text="Show diagram", command=self.show_diagram)
-        diagram_btn.grid(row=6, column=1)
+        diagram_btn = Button(text="Show diagram", command=self.show_histogram)
+        diagram_btn.grid(row=4, column=2)
+
+        expected_value_label = Label(textvariable=self.expected_value)
+        dispersion_label = Label(textvariable=self.dispersion)
+        sigma_label = Label(textvariable=self.sigma)
+        indirect_sign_label = Label(textvariable=self.indirect_sign)
+        period_label = Label(textvariable=self.period)
+        aperiodicity_label = Label(textvariable=self.aperiodicity)
+
+        expected_value_label.grid(row=5, column=1, sticky="w")
+        dispersion_label.grid(row=6, column=1, sticky="w")
+        sigma_label.grid(row=7, column=1, sticky="w")
+        indirect_sign_label.grid(row=8, column=1, sticky="w")
+        period_label.grid(row=9, column=1, sticky="w")
+        aperiodicity_label.grid(row=10, column=1, sticky="w")
 
     def results_button(self):
-        self.analyzer.analyze(self.context.sequence)
+        result = self.analyzer.analyze(self.context.sequence)
+        self.__show_results(result)
 
-        print(self.context.sequence)
-        print(self.analyzer.expected_value)
-        print(self.analyzer.dispersion)
-        print(self.analyzer.period)
-        print(self.analyzer.aperiodicity)
-        # print(self.analyzer.indirect_verification(self.context.sequence))
-
-    def show_diagram(self):
-        self.histogram(self.context.sequence, 20, False, "123", "321")
-
-    def histogram(data, n_bins, cumulative=False, x_label="", y_label="", title=""):
-        _, ax = plt.subplots()
-        ax.hist(data, n_bins=n_bins, cumulative=cumulative, color='#539caf')
-        ax.set_ylabel(y_label)
-        ax.set_xlabel(x_label)
-        ax.set_title(title)
+    def show_histogram(self):
+        plt.hist(self.context.sequence, bins=20)
+        plt.show()
 
     def generate_button(self):
         try:
-           self.__configure_generator(int(self.a.get()), int(self.m.get()), int(self.modulo.get()))
-           self.__generate_sequence(int(self.n.get()))
+            self.__configure_generator(int(self.a.get()), int(self.m.get()), int(self.modulo.get()))
+            self.__generate_sequence(int(self.n.get()))
         except ValueError:
             messagebox.showinfo("Error", "Value should be a number")
 
     def __generate_sequence(self, n):
+        self.context.sequence = []
         for i in range(n):
             self.context.sequence.append(self.generator.get_next())
 
@@ -86,16 +99,21 @@ class MainApp:
         config = GeneratorConfig(a=a, m=m, start_modulo=modulo)
         self.generator.configure(config)
 
+    def __show_results(self, result):
+        self.expected_value.set("Мат. ожидание: " + str(result.expected_value))
+        self.dispersion.set("Дисперсия: " + str(result.dispersion))
+        self.sigma.set("Ср. кв. откнонение:" + str(math.sqrt(result.dispersion)))
+        self.indirect_sign.set("Косвенный признак" + str(result.indirect_sign))
+        self.period.set("Период: " + str(result.period))
+        self.aperiodicity.set("Участок апериодичности: " + str(result.aperiodicity))
 
 
 def start_app():
     root = Tk()
     app = MainApp(root)
     root.title("Option")
-    root.geometry("400x300")
+    root.geometry("350x300")
     root.mainloop()
 
 
 start_app()
-
-
