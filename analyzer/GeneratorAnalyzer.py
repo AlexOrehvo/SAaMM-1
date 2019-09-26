@@ -44,7 +44,7 @@ class GeneratorAnalyzer:
         if i == 0:
             return None
         else:
-            len(sequence) - i - 1
+            return len(sequence) - i - 1
 
     def __get_aperiodicity(self, sequence, period):
         if period is None:
